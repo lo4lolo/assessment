@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2022 개정 교육과정, 초등 평가의 새로운 길</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Visualization & Content Choices:
+        - Section 1 (Why Change?): Report Info (1.1, 2.1 - Need for assessment change, 2022 curriculum shifts). Goal: Establish context. Viz/Presentation: Text summaries, HTML/CSS timeline, Chart.js bar chart (2015 vs 2022 assessment focus). Interaction: Clickable timeline details. Justification: Visualizing shifts is more impactful than text alone. Library: Chart.js.
+        - Section 2 (Key Concepts): Report Info (2.2, 3.1, 4.1, 5.1 - Definitions of 2022 curriculum, CBI, POA, AI). Goal: Provide foundational knowledge. Viz/Presentation: Accordions/cards for each concept, adapted Table 1 (HTML table/cards), HTML/CSS diagrams (CBI-POA-Competencies relationship, AI workflow). Interaction: Expand/collapse accordions, hover tooltips. Justification: Breaking down dense definitions into manageable, interactive chunks. Library: None (HTML/CSS for diagrams).
+        - Section 3 (Practical Application): Report Info (3.2, 3.3, 4.2, 5.2, 5.3 - CBI design, POA linkage, POA methods, AI prompts, AI examples from Table 3). Goal: Offer actionable strategies. Viz/Presentation: Step-by-step guides (HTML lists/cards), HTML table for CBI-POA, interactive cards for POA methods & AI tools (from Table 3), HTML/CSS GRASPS model. Interaction: Tabs/carousel, mock "Prompt Builder". Justification: Practical steps and examples are crucial for teachers. AI tool info from Table 3 is made interactive. Library: Chart.js (Donut for POA methods).
+        - Section 4 (Considerations): Report Info (4.3, 5.4 - POA challenges, AI ethics). Goal: Highlight important caveats. Viz/Presentation: Clickable solutions for POA challenges, visually distinct sections for AI ethics, HTML table for AI Do's/Don'ts, HTML/CSS "teacher in the loop" diagram. Interaction: Toggles for ethical points. Justification: Clear, actionable advice on challenges and ethics. Library: None (HTML/CSS for diagram).
+        - Section 5 (Moving Forward): Report Info (6.1, 6.2 - Synergy, policy). Goal: Conclude and inspire. Viz/Presentation: Summarized text, HTML/CSS Venn diagram (CBI-POA-AI synergy). Interaction: Links to external resources (placeholder). Justification: Visualizing synergy reinforces the main message. Library: None (HTML/CSS for diagram).
+        CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #FDFBF6; color: #3C3633; }
+        .nav-link { transition: color 0.3s ease, border-bottom-color 0.3s ease; }
+        .nav-link:hover, .nav-link.active { color: #70A9A1; border-bottom-color: #70A9A1; }
+        .section-title { color: #70A9A1; }
+        .card { background-color: #FFFFFF; border: 1px solid #E9E0D2; border-radius: 0.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); }
+        .accordion-button.active { background-color: #E9E0D2; color: #3C3633; }
+        .accent-bg { background-color: #70A9A1; }
+        .accent-text { color: #70A9A1; }
+        .secondary-accent-bg { background-color: #E9E0D2; }
+        .highlight-text { color: #B8A99A; }
+        .chart-container { position: relative; width: 100%; max-width: 600px; margin-left: auto; margin-right: auto; height: 300px; max-height: 400px; }
+        @media (min-width: 768px) { .chart-container { height: 350px; } }
+        .tab-button.active { background-color: #70A9A1; color: white; }
+        .tab-button { background-color: #E9E0D2; color: #3C3633; }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            border-bottom: 1px dotted #3C3633;
+            cursor: help;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 280px;
+            background-color: #3C3633;
+            color: #fff;
+            text-align: left;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 135%;
+            left: 50%;
+            margin-left: -140px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.875rem;
+            line-height: 1.4;
+        }
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #3C3633 transparent transparent transparent;
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+         .step-circle {
+            width: 3rem; height: 3rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white;
+            background-color: #B8A99A; margin-right: 1rem; flex-shrink: 0;
+        }
+        .step-content h4 { color: #70A9A1; }
+        .venn-diagram { display: flex; justify-content: center; align-items: center; position: relative; width: 300px; height: 200px; margin: 2rem auto; }
+        .venn-circle { width: 120px; height: 120px; border-radius: 50%; display: flex; justify-content: center; align-items: center; text-align: center; font-size: 0.9rem; padding: 0.5rem; color: white; position: absolute; opacity: 0.8; }
+        .venn-cbi { background-color: #70A9A1; top: 0; left: 40px; }
+        .venn-poa { background-color: #B8A99A; top: 0; right: 40px; }
+        .venn-ai { background-color: #A48A79; bottom: 0; left: 50%; transform: translateX(-50%); }
+        .venn-intersection-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: bold; font-size: 1rem; color: #3C3633; z-index:10; background-color: rgba(253, 251, 246, 0.7); padding: 5px; border-radius: 5px;}
+
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <span class="font-bold text-xl accent-text">초등 평가 혁신 가이드</span>
+                </div>
+                <nav class="hidden md:flex space-x-4">
+                    <a href="#why-change" class="nav-link px-3 py-2 rounded-md text-sm font-medium border-b-2 border-transparent">왜 변화해야 할까요?</a>
+                    <a href="#key-concepts" class="nav-link px-3 py-2 rounded-md text-sm font-medium border-b-2 border-transparent">무엇을 알아야 할까요?</a>
+                    <a href="#practical-application" class="nav-link px-3 py-2 rounded-md text-sm font-medium border-b-2 border-transparent">어떻게 적용할까요?</a>
+                    <a href="#considerations" class="nav-link px-3 py-2 rounded-md text-sm font-medium border-b-2 border-transparent">무엇을 주의해야 할까요?</a>
+                    <a href="#moving-forward" class="nav-link px-3 py-2 rounded-md text-sm font-medium border-b-2 border-transparent">더 나아가기</a>
+                </nav>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-gray-500 hover:text-gray-700 focus:outline-none focus:text-gray-700">
+                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="mobile-menu" class="md:hidden hidden">
+            <a href="#why-change" class="block nav-link px-3 py-2 rounded-md text-base font-medium border-b-2 border-transparent">왜 변화해야 할까요?</a>
+            <a href="#key-concepts" class="block nav-link px-3 py-2 rounded-md text-base font-medium border-b-2 border-transparent">무엇을 알아야 할까요?</a>
+            <a href="#practical-application" class="block nav-link px-3 py-2 rounded-md text-base font-medium border-b-2 border-transparent">어떻게 적용할까요?</a>
+            <a href="#considerations" class="block nav-link px-3 py-2 rounded-md text-base font-medium border-b-2 border-transparent">무엇을 주의해야 할까요?</a>
+            <a href="#moving-forward" class="block nav-link px-3 py-2 rounded-md text-base font-medium border-b-2 border-transparent">더 나아가기</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <section class="text-center py-12">
+            <h1 class="text-4xl font-bold mb-4 section-title">2022 개정 교육과정, 초등 평가의 새로운 길을 찾다</h1>
+            <p class="text-xl text-gray-700">AI와 함께하는 개념기반 탐구학습 및 과정중심평가 심층 분석 및 적용 가이드</p>
+        </section>
+
+        <section id="why-change" class="py-12">
+            <h2 class="text-3xl font-semibold mb-6 section-title">1. 왜 변화해야 할까요?</h2>
+            <div class="space-y-6">
+                <p class="text-lg leading-relaxed">이 섹션에서는 2022 개정 교육과정이 추구하는 교육 패러다임의 전환과 그에 따른 초등 평가 혁신의 필요성을 살펴봅니다. 미래 사회가 요구하는 핵심 역량 함양을 위해 평가는 어떻게 변화해야 하는지, 그리고 이러한 변화가 선생님들의 교육 활동에 어떤 의미를 갖는지 함께 고민해봅니다.</p>
+                <div class="card p-6">
+                    <h3 class="text-2xl font-semibold mb-3 highlight-text">1.1. 2022 개정 교육과정과 평가 혁신의 요구</h3>
+                    <p class="mb-4">2022 개정 교육과정은 디지털 전환, 기후 변화 등 급변하는 미래 사회에 대응하기 위한 교육 혁신을 목표로 합니다. 이는 단순 지식 전달을 넘어, 학생 주도성 신장 및 미래 핵심 역량(자기관리, 지식정보처리, 창의적 사고, 심미적 감성, 협력적 소통, 공동체 역량) 함양을 강조합니다. 따라서 기존의 결과 중심 평가는 이러한 역량을 종합적으로 파악하고 지원하는 데 한계가 있으며, 평가는 학생 성장을 지원하고 미래 역량 함양을 촉진하는 방향으로 전환되어야 합니다.</p>
+                    <div class="chart-container my-6">
+                        <canvas id="assessmentFocusChart"></canvas>
+                    </div>
+                    <p class="text-sm text-gray-600 text-center">위 차트는 2015 개정 교육과정과 2022 개정 교육과정에서 강조하는 평가의 초점 변화를 <span class="tooltip">시각적으로 나타낸 것<span class="tooltiptext">본 보고서의 1.1, 1.2, 2.1절 및 교육부(2022)의 '2022 개정 교육과정 총론 주요사항' 등 관련 문헌을 종합적으로 참고하여, 두 교육과정 간 평가 패러다임의 핵심적인 변화 경향을 도식화한 예시입니다. 차트의 구체적인 수치는 정량적 데이터를 직접 인용한 것이 아니라, 변화의 상대적 강조 수준을 나타내기 위한 것입니다.</span></span>입니다.</p>
+                </div>
+                <div class="card p-6">
+                    <h3 class="text-2xl font-semibold mb-3 highlight-text">1.2. 미래 역량 함양을 위한 평가 패러다임 전환</h3>
+                    <p>미래 사회는 자기 주도성, 창의력, 비판적 사고력 등 고차원적 역량을 요구합니다. 평가는 학습 결과 확인을 넘어, 학습 과정 전반에서 학생의 성장을 지원하고 잠재력을 이끌어내는 적극적 역할을 수행해야 합니다. 이는 '학습을 위한 평가(assessment for learning)'이자 '학습으로서의 평가(assessment as learning)'로 기능하며, 학생 스스로 학습 과정을 성찰하고 개선하도록 돕는 데 초점을 맞춥니다. 이러한 전환은 교사에게도 평가의 목적과 기능에 대한 근본적인 인식 변화를 요구합니다.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="key-concepts" class="py-12">
+            <h2 class="text-3xl font-semibold mb-6 section-title">2. 무엇을 알아야 할까요?</h2>
+            <p class="text-lg leading-relaxed mb-6">이 섹션에서는 2022 개정 교육과정이 제시하는 평가의 방향과 핵심 원칙, 그리고 새로운 평가를 이해하고 실천하는 데 필요한 주요 개념들(개념기반 탐구학습, 과정중심평가, 생성형 AI 기초)을 자세히 알아봅니다. 각 개념의 정의, 핵심 원리, 교육적 가치를 명확히 이해함으로써 실제 평가 상황에 적용할 수 있는 기초를 다질 수 있습니다.</p>
+            <div id="accordion-key-concepts" class="space-y-4">
+                <div class="card">
+                    <button class="accordion-button w-full text-left px-6 py-4 text-xl font-medium focus:outline-none flex justify-between items-center">
+                        2022 개정 교육과정과 평가
+                        <span class="transform transition-transform duration-300">▼</span>
+                    </button>
+                    <div class="accordion-content hidden p-6 border-t border-gray-200">
+                        <p class="mb-4">2022 개정 교육과정은 학생들의 미래 핵심 역량 함양을 위해 교육 내용 및 방법의 변화를 강조합니다. 평가는 핵심 아이디어 중심의 깊이 있는 학습을 지원하고, 학생의 삶과 연계된 실생활 중심 내용, 디지털 소양 등을 포함해야 합니다. 학교 자율시간 도입은 맞춤형 평가 설계 및 운영의 중요성을 더합니다.</p>
+                        <h4 class="text-lg font-semibold mt-4 mb-2 accent-text">표 1 요약: 2022 개정 초등 교육과정의 평가 관련 주요 변화</h4>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div class="secondary-accent-bg p-4 rounded"><strong>평가 목표:</strong> 미래 핵심 역량 종합적 함양, 학생의 전인적 성장 지원</div>
+                            <div class="secondary-accent-bg p-4 rounded"><strong>평가 내용:</strong> 핵심 아이디어 기반 깊이 있는 학습, 실생활 연계, 디지털 소양</div>
+                            <div class="secondary-accent-bg p-4 rounded"><strong>평가 방법:</strong> 과정중심평가 강화, 자기 성찰 및 피드백, AI 활용, 교과 연계</div>
+                            <div class="secondary-accent-bg p-4 rounded"><strong>평가 주체:</strong> 교사, 학생, 동료 참여, 자기주도적 학습 및 평가 역량 강화</div>
+                        </div>
+                         <div class="mt-6 p-4 border rounded-lg bg-sky-50">
+                            <h4 class="text-lg font-semibold mb-2 text-sky-700">핵심 역량, 개념기반 탐구, 과정중심평가의 관계</h4>
+                            <div class="flex flex-col items-center space-y-4 md:flex-row md:space-y-0 md:space-x-4 md:justify-around p-4">
+                                <div class="text-center p-3 border border-sky-300 rounded-lg bg-white shadow">
+                                    <p class="font-semibold text-sky-600">2022 핵심 역량</p>
+                                    <p class="text-xs">(자기관리, 지식정보처리 등)</p>
+                                </div>
+                                <div class="text-2xl text-sky-500 self-center transform md:rotate-0 rotate-90">&rarr;</div>
+                                <div class="text-center p-3 border border-sky-300 rounded-lg bg-white shadow">
+                                    <p class="font-semibold text-sky-600">개념기반 탐구학습 (CBI)</p>
+                                    <p class="text-xs">(깊이 있는 이해, 전이)</p>
+                                </div>
+                                 <div class="text-2xl text-sky-500 self-center transform md:rotate-0 rotate-90">&rarr;</div>
+                                <div class="text-center p-3 border border-sky-300 rounded-lg bg-white shadow">
+                                    <p class="font-semibold text-sky-600">과정중심평가 (POA)</p>
+                                    <p class="text-xs">(성장 지원, 피드백)</p>
+                                </div>
+                            </div>
+                            <p class="text-sm text-sky-700 mt-2 text-center">2022 개정 교육과정이 추구하는 핵심 역량은 개념기반 탐구학습을 통해 심화되며, 과정중심평가는 이 모든 과정을 지원하고 촉진합니다.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <button class="accordion-button w-full text-left px-6 py-4 text-xl font-medium focus:outline-none flex justify-between items-center">
+                        개념기반 탐구학습 (Concept-Based Inquiry, CBI)
+                        <span class="transform transition-transform duration-300">▼</span>
+                    </button>
+                    <div class="accordion-content hidden p-6 border-t border-gray-200">
+                        <p class="mb-4">개념기반 탐구학습(Concept-Based Inquiry, 이하 CBI)은 교과를 관통하는 핵심 개념에 대한 깊이 있는 이해를 형성하고, 이를 다양한 상황에 적용하는 능력을 기르는 교수·학습 방법입니다. '무엇'을 아는 것을 넘어 '왜' 그리고 '어떻게' 중요한지 이해하도록 돕습니다. (출처: 본 보고서 3.1절)</p>
+                        <h4 class="text-lg font-semibold mt-4 mb-2 accent-text">CBI 핵심 원리:</h4>
+                        <ul class="list-disc list-inside space-y-1">
+                            <li><strong>전이 가능한 이해:</strong> 학습한 개념을 새로운 상황에 적용</li>
+                            <li><strong>귀납적 접근:</strong> 구체적 사례에서 일반 원리 도출</li>
+                            <li><strong>학습자 주도성:</strong> 스스로 질문하고 탐구 과정 계획</li>
+                            <li><strong>사실적 지식과 개념적 이해의 시너지:</strong> 상호 보완적 관계</li>
+                            <li><strong>교사의 질문과 피드백:</strong> 사고 자극 및 탐구 심화</li>
+                        </ul>
+                        <p class="mt-4">CBI는 비판적 사고력, 창의적 문제해결력 등 미래 핵심 역량 함양에 기여하며, 학습에 대한 내재적 동기를 강화합니다.</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <button class="accordion-button w-full text-left px-6 py-4 text-xl font-medium focus:outline-none flex justify-between items-center">
+                        과정중심평가 (Process-Oriented Assessment, POA)
+                        <span class="transform transition-transform duration-300">▼</span>
+                    </button>
+                    <div class="accordion-content hidden p-6 border-t border-gray-200">
+                        <p class="mb-4">과정중심평가(Process-Oriented Assessment, 이하 POA)는 교수·학습 과정에서 학생의 변화와 성장에 대한 정보를 다각도로 수집하고, 적절한 피드백을 제공하여 학습을 지원하는 평가 방식입니다. '어떻게 배우고 있는지', '어떤 어려움을 겪는지' 등 학습 과정 자체에 주목합니다. (일반적으로 영문권에서는 'Process-Based Assessment'로도 많이 지칭됩니다. 출처: 본 보고서 4.1절)</p>
+                        <h4 class="text-lg font-semibold mt-4 mb-2 accent-text">POA의 중요성 (2022 개정 교육과정):</h4>
+                        <ul class="list-disc list-inside space-y-1">
+                            <li>학습자 주도성 및 깊이 있는 학습 지원</li>
+                            <li>교수·학습·평가의 일체화 추구</li>
+                            <li>학생의 자기 성찰 및 성장 지원</li>
+                        </ul>
+                        <p class="mt-4">POA는 2022 개정 교육과정의 성공적 안착을 위한 필수 요소이며, 교사는 교육과정-수업-평가의 유기적 연계를 통해 학생 학습 과정을 지원해야 합니다.</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <button class="accordion-button w-full text-left px-6 py-4 text-xl font-medium focus:outline-none flex justify-between items-center">
+                        생성형 AI 기초 (교사 입문자용)
+                        <span class="transform transition-transform duration-300">▼</span>
+                    </button>
+                    <div class="accordion-content hidden p-6 border-t border-gray-200">
+                        <p class="mb-4">생성형 인공지능(Generative AI)은 기존 데이터를 학습하여 텍스트, 이미지 등 새로운 콘텐츠를 만드는 기술입니다 (예: ChatGPT). 사용자의 지시(프롬프트)에 따라 결과물을 생성하며, 교육 분야에서 수업 자료 구상, 평가 문항 초안 작성, 맞춤형 학습 자료 제작 등에 활용될 수 있습니다. (출처: 본 보고서 5.1절)</p>
+                        <div class="my-4 p-4 border rounded-lg bg-amber-50">
+                            <h5 class="font-semibold text-amber-700">생성형 AI 작동 원리 (간단히 보기)</h5>
+                            <div class="flex items-center justify-around mt-2 text-sm">
+                                <div class="text-center p-2 bg-white border border-amber-300 rounded shadow">사용자 입력<br>(프롬프트)</div>
+                                <div class="text-2xl text-amber-500">&rarr;</div>
+                                <div class="text-center p-2 bg-white border border-amber-300 rounded shadow">AI 모델<br>(학습된 데이터 기반 처리)</div>
+                                <div class="text-2xl text-amber-500">&rarr;</div>
+                                <div class="text-center p-2 bg-white border border-amber-300 rounded shadow">생성된 결과물<br>(텍스트, 이미지 등)</div>
+                            </div>
+                        </div>
+                        <p class="font-semibold mt-4">주의사항:</p>
+                        <ul class="list-disc list-inside space-y-1 text-sm">
+                            <li>생성된 정보가 부정확하거나 편향될 수 있음 (환각 현상).</li>
+                            <li>항상 교사의 비판적 검토와 판단이 필요.</li>
+                        </ul>
+                        <p class="mt-3">생성형 AI는 평가 업무 부담을 줄이고 질을 높이는 유용한 <span class="tooltip">도구<span class="tooltiptext">AI는 보조 수단이며, 교육적 판단은 교사의 몫입니다. AI가 생성한 결과물은 반드시 교사가 검토하고 수정해야 합니다.</span></span>가 될 수 있지만, 맹신은 금물입니다.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="practical-application" class="py-12">
+            <h2 class="text-3xl font-semibold mb-6 section-title">3. 어떻게 적용할까요?</h2>
+            <p class="text-lg leading-relaxed mb-6">이 섹션에서는 앞서 살펴본 주요 개념들을 실제 초등 교육 현장에 적용하기 위한 구체적인 방법과 아이디어를 제공합니다. 개념기반 탐구 활동 설계부터 과정중심평가와의 연계, 다양한 평가 방법 활용, 그리고 생성형 AI를 효과적으로 사용하는 프롬프트 작성법 및 평가 개선 사례까지, 선생님들께서 바로 활용해 보실 수 있는 실질적인 팁과 예시들을 중심으로 구성했습니다.</p>
+            
+            <div class="mb-4 border-b border-gray-200">
+                <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                    <button data-tab="cbi-design" class="tab-button active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">CBI 활동 설계</button>
+                    <button data-tab="cbi-poa-link" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">CBI와 POA 연계</button>
+                    <button data-tab="poa-methods" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">POA 운영 방법</button>
+                    <button data-tab="ai-prompts" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">AI 프롬프트 작성</button>
+                    <button data-tab="ai-assessment" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">AI 활용 평가 개선</button>
+                </nav>
+            </div>
+
+            <div id="tab-content-container" class="space-y-8">
+                <div id="tab-cbi-design" class="tab-content">
+                    <h3 class="text-2xl font-semibold mb-4 highlight-text">3.1. 초등학생을 위한 개념기반 탐구 활동 설계 방안</h3>
+                    <p class="mb-4">학생들의 발달 수준과 흥미를 고려하여, 스스로 의미 있는 질문을 만들고 탐구를 통해 개념적 이해에 도달하도록 안내하는 것이 핵심입니다. (출처: 본 보고서 3.2절)</p>
+                    <h4 class="text-xl font-semibold mt-4 mb-2 accent-text">탐구 질문 생성 단계:</h4>
+                    <ul class="list-decimal list-inside space-y-2 mb-4">
+                        <li><strong>사실적 질문:</strong> "우리나라의 사계절은 무엇인가요?"</li>
+                        <li><strong>개념적 질문:</strong> "계절의 변화는 우리 생활에 어떤 영향을 미칠까요?"</li>
+                        <li><strong>논쟁적 질문:</strong> "지구온난화로 인한 계절 변화 문제에 대처하기 위해 우리는 무엇을 해야 할까요?"</li>
+                    </ul>
+                    <h4 class="text-xl font-semibold mt-4 mb-2 accent-text">CBI 활동 설계 6단계:</h4>
+                    <div class="space-y-4">
+                        <div class="flex items-start card p-4"><div class="step-circle">1</div><div class="step-content"><h4>관계 맺기:</h4><p class="text-sm">학습 주제와 학생 경험 연결, 호기심 유발.</p></div></div>
+                        <div class="flex items-start card p-4"><div class="step-circle">2</div><div class="step-content"><h4>집중하기:</h4><p class="text-sm">핵심 개념 정의, 탐구 방향 설정 (일반화 진술 도출).</p></div></div>
+                        <div class="flex items-start card p-4"><div class="step-circle">3</div><div class="step-content"><h4>조사하기:</h4><p class="text-sm">다양한 자료 조사 및 탐구 활동 수행.</p></div></div>
+                        <div class="flex items-start card p-4"><div class="step-circle">4</div><div class="step-content"><h4>조직하기:</h4><p class="text-sm">수집 정보 분류 및 정리, 패턴 파악 (개념도, 차트 활용).</p></div></div>
+                        <div class="flex items-start card p-4"><div class="step-circle">5</div><div class="step-content"><h4>일반화하기:</h4><p class="text-sm">일반화 진술 정교화 및 검증 (교사 발문/피드백 중요).</p></div></div>
+                        <div class="flex items-start card p-4"><div class="step-circle">6</div><div class="step-content"><h4>적용 및 성찰하기:</h4><p class="text-sm">일반화를 새 상황에 적용, 탐구 과정 성찰.</p></div></div>
+                    </div>
+                </div>
+
+                <div id="tab-cbi-poa-link" class="tab-content hidden">
+                    <h3 class="text-2xl font-semibold mb-4 highlight-text">3.2. 개념기반 탐구학습 과정에서의 과정중심평가 연계</h3>
+                    <p class="mb-4">CBI의 각 단계에서 학생들의 개념 이해도, 탐구 기능, 협력 과정 등을 다각적으로 평가하고 시의적절한 피드백을 제공하여 성장을 지원합니다. (출처: 본 보고서 3.3절)</p>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="secondary-accent-bg">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">CBI 단계</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">주요 평가 요소</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">평가 방법 예시</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr><td class="px-6 py-4">관계 맺기</td><td class="px-6 py-4">사전 지식, 흥미도, 질문 생성 능력</td><td class="px-6 py-4">관찰, 진단 활동</td></tr>
+                                <tr><td class="px-6 py-4">집중하기</td><td class="px-6 py-4">초기 개념 이해, 참여도</td><td class="px-6 py-4">개념도, 브레인스토밍</td></tr>
+                                <tr><td class="px-6 py-4">조사하기</td><td class="px-6 py-4">정보 수집/분석, 탐구 도구 활용</td><td class="px-6 py-4">탐구 일지, 관찰, 동료평가</td></tr>
+                                <tr><td class="px-6 py-4">조직하기</td><td class="px-6 py-4">정보 조직력, 관계/패턴 파악</td><td class="px-6 py-4">개념도, 보고서 초안</td></tr>
+                                <tr><td class="px-6 py-4">일반화하기</td><td class="px-6 py-4">일반화 진술 타당성, 논리성</td><td class="px-6 py-4">토론, 발표, 논술형</td></tr>
+                                <tr><td class="px-6 py-4">적용/성찰하기</td><td class="px-6 py-4">개념 적용력, 자기 성찰 능력</td><td class="px-6 py-4">문제 해결 과제, 성찰 보고서</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="mt-4">평가 도구로 <span class="tooltip">루브릭<span class="tooltiptext">평가 기준을 구체적으로 명시한 표. 학생의 성취 수준을 단계별로 기술하여 평가의 객관성과 일관성을 높입니다.</span></span>이나 GRASPS 모델을 활용한 수행 과제 설계가 유용합니다. 무엇보다 중요한 것은 구체적이고 건설적인 피드백 제공입니다.</p>
+                </div>
+
+                <div id="tab-poa-methods" class="tab-content hidden">
+                    <h3 class="text-2xl font-semibold mb-4 highlight-text">3.3. 초등학교 과정중심평가 운영 절차 및 방법</h3>
+                     <p class="mb-4">과정중심평가는 체계적인 계획, 다양한 방법 활용, 의미 있는 기록 및 활용이 중요합니다. (출처: 본 보고서 4.2절)</p>
+                    <h4 class="text-xl font-semibold mt-4 mb-2 accent-text">운영 절차:</h4>
+                    <ol class="list-decimal list-inside space-y-1 mb-4">
+                        <li><strong>평가 계획 수립:</strong> 학기 초/단원 시작 전 성취기준 분석, 평가 내용/방법/시기/기준/피드백 방안 계획 (교수·학습 계획과 동시 수립)</li>
+                        <li><strong>다양한 평가 방법 활용:</strong> 학생의 학습 과정과 성장을 다각적으로 파악</li>
+                        <li><strong>평가 결과 기록 및 활용:</strong> 누가 기록 관리, 학생 강점/약점 파악, 맞춤형 피드백 제공, 교수·학습 방법 개선 자료로 활용</li>
+                    </ol>
+                    <h4 class="text-xl font-semibold mt-4 mb-2 accent-text">다양한 평가 방법 예시:</h4>
+                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div class="card p-3 text-sm"><strong>서·논술형 평가:</strong> 이해력, 분석력, 표현력 평가</div>
+                        <div class="card p-3 text-sm"><strong>프로젝트 평가:</strong> 주도적 탐구 및 결과물 제작 과정 종합 평가</div>
+                        <div class="card p-3 text-sm"><strong>토의·토론 평가:</strong> 의사소통, 협력, 논리적 사고력 평가</div>
+                        <div class="card p-3 text-sm"><strong>발표 평가:</strong> 내용 전달력, 질의응답 능력 평가</div>
+                        <div class="card p-3 text-sm"><strong>실험·실습 평가:</strong> 탐구 능력, 실기 능력, 문제 해결 과정 평가</div>
+                        <div class="card p-3 text-sm"><strong>관찰 평가:</strong> 학습 태도, 참여도, 상호작용 등 지속 관찰 기록</div>
+                        <div class="card p-3 text-sm"><strong>자기평가 및 동료평가:</strong> 메타인지, 책임감 향상</div>
+                        <div class="card p-3 text-sm"><strong>포트폴리오 평가:</strong> 학습 과정과 결과물 체계적 수집, 성장 과정 종합 평가</div>
+                    </div>
+                    <div class="chart-container my-6">
+                        <canvas id="poaMethodsChart"></canvas>
+                    </div>
+                     <p class="text-sm text-gray-600 text-center">위 차트는 초등 과정중심평가에서 활용될 수 있는 다양한 평가 방법의 예시적 분포를 보여줍니다.</p>
+                </div>
+                
+                <div id="tab-ai-prompts" class="tab-content hidden">
+                    <h3 class="text-2xl font-semibold mb-4 highlight-text">3.4. 효과적인 AI 프롬프트 작성 기초</h3>
+                    <p class="mb-4">생성형 AI로부터 유용한 결과물을 얻기 위해서는 명확하고 구체적인 프롬프트 작성이 중요합니다. AI 입문 교사를 위한 기본 원칙입니다. (출처: 본 보고서 5.2절)</p>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="card p-4"><strong>1. 명확성:</strong> AI가 이해하기 쉽게 분명한 언어 사용</div>
+                        <div class="card p-4"><strong>2. 구체성:</strong> 원하는 결과물 정보(주제, 형식, 분량, 대상 등) 구체적 제공</div>
+                        <div class="card p-4"><strong>3. 간결성:</strong> 핵심 요구사항 중심, 불필요 내용 생략</div>
+                        <div class="card p-4"><strong>4. 맥락 제공:</strong> 필요한 배경 정보나 상황 제공</div>
+                        <div class="card p-4"><strong>5. 역할 부여:</strong> AI에게 특정 역할 부여 (예: "너는 초등 5학년 담임교사야")</div>
+                        <div class="card p-4"><strong>6. 예시 제공:</strong> 원하는 결과물 스타일/형식 예시 제공</div>
+                    </div>
+                    <h4 class="text-xl font-semibold mt-6 mb-2 accent-text">프롬프트 예시:</h4>
+                    <div class="secondary-accent-bg p-4 rounded">
+                        <p class="font-semibold">형성평가 문항 아이디어 요청:</p>
+                        <p class="text-sm">"초등학교 4학년 사회 '우리 지역의 문화유산' 단원 학습 목표에 맞는 형성평가 문항 아이디어 5가지를 객관식 2개, 단답형 2개, 서술형 1개 형식으로 제시해 주세요. 각 문항은 학생들이 우리 지역 문화유산의 종류와 특징을 이해했는지 평가할 수 있어야 합니다."</p>
+                    </div>
+                    <div class="secondary-accent-bg p-4 rounded mt-3">
+                        <p class="font-semibold">학생 글쓰기 피드백 초안 요청:</p>
+                        <p class="text-sm">"다음은 초등학생이 작성한 일기입니다. [일기 내용 삽입] 이 일기에서 잘된 점 2가지와 개선할 점 1가지를 구체적인 예시와 함께 부드러운 어투로 작성해 주세요."</p>
+                    </div>
+                     <p class="mt-4">프롬프트의 질이 AI 결과물의 질을 결정합니다. 다양한 시도를 통해 효과적인 프롬프트 작성 노하우를 축적하세요.</p>
+                </div>
+
+                <div id="tab-ai-assessment" class="tab-content hidden">
+                    <h3 class="text-2xl font-semibold mb-4 highlight-text">3.5. 생성형 AI를 활용한 평가 개선 지원 사례</h3>
+                    <p class="mb-4">생성형 AI는 평가 계획, 자료 제작, 실행 및 피드백 제공 등 평가 전 과정에서 교사를 지원할 수 있습니다. (출처: 본 보고서 5.3절)</p>
+                    <div class="space-y-4">
+                        <div class="card p-4">
+                            <h4 class="text-lg font-semibold accent-text">평가 계획 수립 지원</h4>
+                            <p class="text-sm">성취기준 분석, 평가 아이디어 도출, 루브릭 초안 생성 (예: "초등 과학 5학년 '물질의 성질' 단원 성취기준 [내용] 확인용 과정중심평가 아이디어 3가지 (평가 목표, 활동, 방법, 결과물 포함) 제시해 줘.")</p>
+                        </div>
+                        <div class="card p-4">
+                            <h4 class="text-lg font-semibold accent-text">평가 자료 제작 지원</h4>
+                            <p class="text-sm">다양한 유형의 평가 문항 아이디어, 시각자료 활용 방안 제안, 수준별 맞춤형 평가 자료 구성 (예: "초2 덧셈/뺄셈 어려워하는 학생용 보충 학습 자료와 형성평가 문항 5개 (그림/실생활 예시, 난이도 조절) 만들어줘.")</p>
+                        </div>
+                        <div class="card p-4">
+                            <h4 class="text-lg font-semibold accent-text">과정중심평가 실행 지원</h4>
+                            <p class="text-sm">학생 활동 결과물 분석 및 피드백 초안 생성 (예: "학생 탐구 보고서 [내용]의 내용 구성, 논리성, 타당성 측면에서 칭찬과 개선 제안 작성해 줘."), 학습 패턴 파악 지원</p>
+                        </div>
+                    </div>
+                    <p class="mt-6 font-semibold">중요: AI는 보조 도구입니다. 교사의 전문적 판단 하에 비판적으로 활용하여 평가의 효율성과 질을 높여야 합니다.</p>
+                    <h4 class="text-xl font-semibold mt-6 mb-2 accent-text">표 3 요약: 생성형 AI 도구별 특징 및 활용 (입문자용)</h4>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="card p-4">
+                            <h5 class="font-bold text-lg">텍스트 생성 AI (ChatGPT 등)</h5>
+                            <p class="text-sm"><strong>특징:</strong> 아이디어/질문 생성, 자료 요약, 글쓰기/루브릭/피드백 초안.</p>
+                            <p class="text-sm"><strong>프롬프트 예시:</strong> "너는 초등 4학년 담임교사야. [주제]에 대한 수업 도입 활동 3가지 (10분 내외, 흥미 유발) 목록 형태로 보여줘."</p>
+                            <p class="text-xs mt-2"><strong>유의:</strong> 정확성 교차 확인, 개인정보 입력 금지, 교사 수정 필수.</p>
+                        </div>
+                         <div class="card p-4">
+                            <h5 class="font-bold text-lg">이미지 생성 AI (DALL-E 등)</h5>
+                            <p class="text-sm"><strong>특징:</strong> 텍스트 기반 이미지 생성. 평가 자료용 삽화, 시각자료 제작 지원.</p>
+                            <p class="text-sm"><strong>프롬프트 예시:</strong> "수채화 느낌으로 그린, 웃고 있는 초등학생들이 함께 책 읽는 모습. 배경에는 햇살 드는 교실 창문."</p>
+                            <p class="text-xs mt-2"><strong>유의:</strong> 저작권 확인, 의도와 다른 이미지 생성 가능, 비교육적 이미지 주의.</p>
+                        </div>
+                        <div class="card p-4 col-span-1 md:col-span-2">
+                            <h5 class="font-bold text-lg">AI 기반 교육 지원 플랫폼 (MagicSchool.ai 등)</h5>
+                            <p class="text-sm"><strong>특징:</strong> 수업 계획, 자료/퀴즈 생성, 자동 채점 등 교육 특화 기능.</p>
+                            <p class="text-sm"><strong>프롬프트 예시 (플랫폼 내):</strong> "초5 과학 '날씨와 우리 생활' 단원, 객관식 5문항, OX 퀴즈 5문항 만들어줘."</p>
+                            <p class="text-xs mt-2"><strong>유의:</strong> 개인정보보호 정책 확인, 자동 채점 결과 교사 검토, 국내 교육과정 정합성 고려.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="considerations" class="py-12">
+            <h2 class="text-3xl font-semibold mb-6 section-title">4. 무엇을 주의해야 할까요?</h2>
+            <p class="text-lg leading-relaxed mb-6">이 섹션에서는 과정중심평가를 학교 현장에 적용할 때 발생할 수 있는 어려움과 이를 극복하기 위한 지원 방안, 그리고 생성형 AI를 교육적으로 활용함에 있어 반드시 고려해야 할 윤리적 문제와 정보보호 관련 사항들을 심도 있게 다룹니다. 새로운 평가 방법을 도입하고 기술을 활용하는 과정에서 발생할 수 있는 위험 요소를 사전에 인지하고 대비하는 것은 매우 중요합니다.</p>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="card p-6">
+                    <h3 class="text-2xl font-semibold mb-3 highlight-text">4.1. 과정중심평가, 현장의 어려움과 극복 방안</h3>
+                    <p class="mb-4">교사들은 평가 부담 증가, 시간 부족, 다인수 학급 관리, 객관성/공정성 확보 부담, 전문성 부족 등을 호소합니다. (출처: 본 보고서 4.3절)</p>
+                    <h4 class="text-lg font-semibold mt-4 mb-2 accent-text">지원 방안:</h4>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>체계적이고 지속적인 교사 연수 (이론 및 실습)</li>
+                        <li>실질적인 평가 자료 개발 및 보급 (예시 자료, 루브릭 등)</li>
+                        <li>전문가 컨설팅 및 학교 간 네트워크 지원 (교사학습공동체)</li>
+                        <li>제도적·환경적 지원 (행정업무 경감, 학급당 학생 수 적정화)</li>
+                    </ul>
+                </div>
+                <div class="card p-6">
+                    <h3 class="text-2xl font-semibold mb-3 highlight-text">4.2. AI 활용 윤리 및 정보보호</h3>
+                    <p class="mb-4">AI 활용 시 정보 편향성/부정확성, 저작권 침해, 개인정보 노출 위험 등을 고려해야 합니다. (출처: 본 보고서 5.4절)</p>
+                    <h4 class="text-lg font-semibold mt-4 mb-2 accent-text">교사 준수 사항:</h4>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li><strong>학생 데이터 보호 최우선:</strong> 개인 식별 정보/민감 평가 데이터 공개 AI 모델 입력 금지. 보안된 도구 우선 사용.</li>
+                        <li><strong>결과물의 비판적 검토 및 교차 확인:</strong> 정확성, 공정성, 교육적 적절성 확인.</li>
+                        <li><strong>교사의 최종 판단 존중:</strong> AI는 보조 도구, 최종 결정은 교사의 몫.</li>
+                        <li><strong>투명성 및 설명 책임:</strong> AI 활용 사실 고지 및 충분한 설명.</li>
+                        <li><strong>지속적인 학습 및 윤리 의식 함양:</strong> 관련 지식 학습 및 윤리적 민감성 제고.</li>
+                    </ul>
+                     <div class="mt-6 p-4 border rounded-lg bg-rose-50">
+                        <h5 class="font-semibold text-rose-700 text-center">교사는 항상 AI 활용의 중심에 있어야 합니다 (Teacher in the Loop)</h5>
+                        <div class="flex items-center justify-center space-x-2 mt-2 text-sm">
+                            <div class="p-2 bg-white border border-rose-300 rounded shadow">AI 제안</div>
+                            <div class="text-2xl text-rose-500">&rarr;</div>
+                            <div class="p-2 accent-bg text-white border border-rose-300 rounded shadow font-bold">교사의<br>검토/판단</div>
+                            <div class="text-2xl text-rose-500">&rarr;</div>
+                            <div class="p-2 bg-white border border-rose-300 rounded shadow">최종 교육적<br>활용/결정</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="moving-forward" class="py-12">
+            <h2 class="text-3xl font-semibold mb-6 section-title">5. 더 나아가기</h2>
+            <p class="text-lg leading-relaxed mb-6">이 마지막 섹션에서는 개념기반 탐구학습, 과정중심평가, 그리고 생성형 AI 활용이 어떻게 상호 시너지를 창출하여 미래지향적인 초등 평가를 만들어갈 수 있는지 조망합니다. 또한, 교사 주도적인 평가 문화를 성공적으로 조성하기 위한 정책적, 연구적 지원 방안을 제안하며, 선생님들께서 이러한 변화의 흐름에 동참하여 평가 전문가로 성장해 나가실 수 있도록 격려와 지지를 보냅니다.</p>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="card p-6">
+                    <h3 class="text-2xl font-semibold mb-3 highlight-text">5.1. CBI, POA, 생성형 AI 활용의 시너지</h3>
+                    <p class="mb-4">CBI는 깊이 있는 학습을, POA는 그 과정을 지원하며, AI는 이 모든 활동의 효율성을 높입니다. 예를 들어, AI는 CBI 수업용 탐구 질문 생성, POA용 루브릭 초안 작성, 학생 결과물 초기 피드백 생성 등을 도와 교사의 업무 부담을 줄이고 개별화 지도를 위한 시간을 확보할 수 있습니다. (출처: 본 보고서 6.1절)</p>
+                    <p class="mb-4">따라서 초등 평가 도움자료는 이 세 요소의 통합적 관점을 반영하여, **통합형 수업-평가 모듈**과 **AI 활용 가이드**를 연계 제시하는 것이 바람직합니다. (예: '환경 문제 해결 프로젝트' CBI 주제 → 탐구 단계별 POA 방안 + 각 단계별 AI 활용 프롬프트 예시)</p>
+                     <div class="venn-diagram">
+                        <div class="venn-circle venn-cbi">개념기반<br>탐구학습<br>(CBI)</div>
+                        <div class="venn-circle venn-poa">과정중심<br>평가<br>(POA)</div>
+                        <div class="venn-circle venn-ai">생성형 AI<br>활용</div>
+                        <div class="venn-intersection-text">시너지</div>
+                    </div>
+                    <p class="text-sm text-gray-600 text-center mt-2">CBI, POA, 생성형 AI의 통합적 활용은 평가 혁신의 시너지를 창출합니다.</p>
+                </div>
+                <div class="card p-6">
+                    <h3 class="text-2xl font-semibold mb-3 highlight-text">5.2. 교사 주도적 평가 문화 조성을 위한 제언</h3>
+                    <ul class="list-disc list-inside space-y-2">
+                        <li><strong>교사의 평가 자율성 확대 및 전문성 신장 지원:</strong> 질 높은 연수, 전문가 컨설팅 및 멘토링 강화.</li>
+                        <li><strong>학교 현장 성공 사례 발굴 및 공유 플랫폼 구축:</strong> 우수 사례 공모전, 워크숍, 온라인 커뮤니티 활성화.</li>
+                        <li><strong>AI 교육적 활용 효과 및 윤리적 쟁점 연구 지원 및 가이드라인 업데이트:</strong> 변화하는 기술 환경에 맞춰 교사 지원.</li>
+                    </ul>
+                    <p class="mt-4">궁극적으로 교사가 평가의 주체로서 자긍심을 갖고 학생 성장을 지원하는 평가 전문가로 거듭나도록 돕는 것이 중요합니다. AI라는 새로운 도구를 현명하게 활용하여 교육의 본질적 가치를 실현할 수 있도록 기술적 지원과 교육철학적 성찰을 돕는 균형 잡힌 접근이 필요합니다. (출처: 본 보고서 6.2절)</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-gray-800 text-white text-center py-6 mt-12">
+        <p>&copy; 하는교사. All rights reserved. 문의: 4lolo@naver.com,</p>
+        <p class="text-sm">본 자료는 교육적 제안 목적으로 Gemini 등을 활용하여 제작되었습니다.</p>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // Accordion functionality
+        const accordionButtons = document.querySelectorAll('.accordion-button');
+        accordionButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const content = button.nextElementSibling;
+                button.classList.toggle('active');
+                content.classList.toggle('hidden');
+                const icon = button.querySelector('span');
+                icon.classList.toggle('rotate-180');
+                 // Ensure other accordions are closed if you want only one open at a time
+                // accordionButtons.forEach(otherButton => {
+                //     if (otherButton !== button && otherButton.classList.contains('active')) {
+                //         otherButton.classList.remove('active');
+                //         otherButton.nextElementSibling.classList.add('hidden');
+                //         otherButton.querySelector('span').classList.remove('rotate-180');
+                //     }
+                // });
+            });
+        });
+        
+        // Smooth scroll for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    // Account for sticky header height
+                    const headerOffset = document.querySelector('header').offsetHeight || 0;
+                    const elementPosition = targetElement.getBoundingClientRect().top;
+                    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+        
+                    window.scrollTo({
+                        top: offsetPosition,
+                        behavior: 'smooth'
+                    });
+
+                    // Close mobile menu if open
+                    if (!mobileMenu.classList.contains('hidden')) {
+                        mobileMenu.classList.add('hidden');
+                         mobileMenuButton.querySelector('svg path').setAttribute('d', 'M4 6h16M4 12h16M4 18h16'); // Reset to menu icon
+                    }
+                }
+            });
+        });
+        
+        // Update mobile menu icon
+        mobileMenuButton.addEventListener('click', () => {
+            const path = mobileMenuButton.querySelector('svg path');
+            if (mobileMenu.classList.contains('hidden')) {
+                path.setAttribute('d', 'M4 6h16M4 12h16M4 18h16'); // Menu icon
+            } else {
+                path.setAttribute('d', 'M6 18L18 6M6 6l12 12'); // Close icon
+            }
+        });
+
+
+        // Active nav link highlighting on scroll
+        const sections = document.querySelectorAll('section[id]');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const headerHeight = document.querySelector('header').offsetHeight || 0;
+
+
+        function highlightNavLink() {
+            let index = sections.length;
+
+            while(--index && window.scrollY + headerHeight + 50 < sections[index].offsetTop) {}
+            
+            navLinks.forEach((link) => link.classList.remove('active'));
+            // Check if a section is found, and if the corresponding link exists
+            if (index >= 0 && sections[index] && sections[index].id) {
+                 const activeLink = document.querySelector(`.nav-link[href="#${sections[index].id}"]`);
+                 if (activeLink) {
+                    activeLink.classList.add('active');
+                 }
+            } else if (window.scrollY < sections[0].offsetTop - headerHeight - 50) {
+                 // If before the first section, no link is active, or you can make the first one active by default
+                 // For now, remove all active classes
+                 navLinks.forEach((link) => link.classList.remove('active'));
+            }
+        }
+
+        window.addEventListener('scroll', highlightNavLink);
+        window.addEventListener('load', highlightNavLink); // Also highlight on page load
+
+
+        // Tab functionality for Practical Application section
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const tabId = button.dataset.tab;
+
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+
+                tabContents.forEach(content => {
+                    if (content.id === `tab-${tabId}`) {
+                        content.classList.remove('hidden');
+                    } else {
+                        content.classList.add('hidden');
+                    }
+                });
+            });
+        });
+
+
+        // Chart.js: Assessment Focus Chart
+        const assessmentFocusCtx = document.getElementById('assessmentFocusChart').getContext('2d');
+        new Chart(assessmentFocusCtx, {
+            type: 'bar',
+            data: {
+                labels: ['결과 중심', '지식 암기', '서열화', '과정 중심', '역량 함양', '성장 지원'],
+                datasets: [{
+                    label: '2015 개정 교육과정',
+                    data: [70, 65, 60, 30, 40, 35],
+                    backgroundColor: '#B8A99A', 
+                    borderColor: '#A48A79',
+                    borderWidth: 1
+                }, {
+                    label: '2022 개정 교육과정',
+                    data: [20, 25, 15, 80, 85, 90],
+                    backgroundColor: '#70A9A1', 
+                    borderColor: '#588E86',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: { display: true, text: '상대적 강조 수준 (예시 %)' }
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '교육과정별 평가 초점 변화 비교 (예시)',
+                        font: { size: 16 }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += context.parsed.y + '% (예시)';
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Chart.js: POA Methods Chart
+        const poaMethodsCtx = document.getElementById('poaMethodsChart').getContext('2d');
+        new Chart(poaMethodsCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['서·논술형', '프로젝트', '토의·토론', '관찰', '자기/동료평가', '포트폴리오'],
+                datasets: [{
+                    label: '과정중심평가 방법 활용 예시',
+                    data: [15, 25, 15, 20, 10, 15],
+                    backgroundColor: [
+                        '#70A9A1',
+                        '#A48A79', 
+                        '#B8A99A', 
+                        '#E9E0D2', 
+                        '#8DBCAE', 
+                        '#C9BBAF'  
+                    ],
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '다양한 과정중심평가 방법 활용 (예시 분포)',
+                        font: { size: 16 }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed !== null) {
+                                    label += context.parsed + '%';
+                                }
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'bottom',
+                         labels: {
+                            generateLabels: function(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    return data.labels.map(function(label, i) {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+                                        let newLabel = label;
+                                        if (label.length > 16) {
+                                            newLabel = label.substring(0, 16) + '...';
+                                        }
+                                        return {
+                                            text: newLabel,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            hidden: isNaN(data.datasets[0].data[i]) || meta.data[i].hidden,
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+    </script>
+</body>
+</html>
